@@ -8,6 +8,11 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
+    return render_template("index.html")
+
+
+@app.route("/books")
+def books_page():
     # return f"<h1>Hello World!</h1><br>{datetime.now()}"
     books = [
         {
@@ -39,7 +44,7 @@ def index():
     username = "chase"
     nowtime = datetime.now().strftime("%Y-%m-%d")
     print(username, nowtime)
-    return render_template("index.html", name=username, now=nowtime, books=books)
+    return render_template("books.html", name=username, now=nowtime, books=books)
 
 
 @app.route("/bmi")
@@ -53,7 +58,7 @@ def get_bmi():
     bmi = round(weight / (height / 100) ** 2, 2)
 
     # return {"height": height, "weight": weight, "bmi": bmi}
-    return render_template("bmi.html", height=height, weight=weight, bmi=bmi)
+    return render_template("bmi.html", **locals())
 
 
 @app.route("/pm25-data")
