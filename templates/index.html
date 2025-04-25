@@ -7,14 +7,37 @@
     <style>
         body{
             text-align: center;
-            /* background-color: rgb(151, 151, 147); */
         }
-        
+        table{
+            width:88%;
+            margin: 0 auto;
+        }
+        th{
+            background-color: aqua;
+        }
     </style>
 </head>
 <body>
     <h1>細懸浮微粒資料(PM2.5)</h1>
-    
+    <table border="1">
+        <thead>
+            <tr>
+                {% for col in columns %}
+                <th>{{col}}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in datas %}
+            <tr>
+                {% for data in row %}
+                <td>{{data}}</td>
+                {% endfor %}
+            {{data}}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </body>
 </html>

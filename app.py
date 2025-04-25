@@ -2,13 +2,15 @@ from flask import Flask, render_template, request
 from datetime import datetime
 import pandas as pd
 import pymysql
+from pm25 import get_pm25_data_from_mysql
 
 app = Flask(__name__)
 
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    columns, datas = get_pm25_data_from_mysql()
+    return render_template("index.html", columns=columns, datas=datas)
 
 
 @app.route("/books")
@@ -61,13 +63,5 @@ def get_bmi():
     return render_template("bmi.html", **locals())
 
 
-@app.route("/pm25-data")
-def get_pm25_data():
-    api_url = "https://data.moenv.gov.tw/api/v2/aqx_p_02?api_key=540e2ca4-41e1-4186-8497-fdd67024ac44&limit=1000&sort=datacreationdate%20desc&format=CSV"
-    df = pd.read_csv(api_url)
-    df["datacreationdate"] = pd.to_datetime(df["datacreationdate"])
-    df1 = df.dropna()
-    return df1.values.tolist()
-
-
-app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
