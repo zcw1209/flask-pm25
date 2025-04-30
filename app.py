@@ -7,6 +7,12 @@ from pm25 import get_pm25_data_from_mysql
 app = Flask(__name__)
 
 
+# 更新資料庫
+@app.route("/update-db")
+def update_db():
+    pass
+
+
 @app.route("/")
 def index():
     columns, datas = get_pm25_data_from_mysql()
