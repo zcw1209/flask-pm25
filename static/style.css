@@ -74,6 +74,10 @@ h3 {
   color: #c0392b;
 }
 
+select{
+  font-size: 16px;
+}
+
 form {
   margin: 12px;
 }
