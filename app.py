@@ -48,13 +48,23 @@ def index():
     county = request.args.get("county", "ALL")
     if county != "ALL":
         # 取得特定縣市的資料
-        df1 = df.groupby("county").get_group(county)
-        columns = df1.columns.tolist()
-        datas = df1.values.tolist()
-        print(columns, datas)
+        df = df.groupby("county").get_group(county)
+        columns = df.columns.tolist()
+        datas = df.values.tolist()
+        # print(columns, datas)
+
+    # 繪製所需資料
+    x_data = df["site"].tolist()
+    y_data = df["pm25"].tolist()
 
     return render_template(
-        "index.html", columns=columns, datas=datas, counties=counties
+        "index.html",
+        columns=columns,
+        datas=datas,
+        counties=counties,
+        selected_county=county,
+        x_data=x_data,
+        y_data=y_data,
     )
 
 
