@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>站點PM2.5資訊頁</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+    <style>
+      #main{
+        text-align: center;
+        margin: 0 auto;
+      }
+    </style>
+</head>
+<body>
+    <h1>站點細懸浮微粒資料(PM2.5)</h1>
+    <h3>選擇縣市</h3>
+    <select name="county" id="county">
+        <option value="ALL">全部縣市</option>
+        {% for county in counties %}
+         <option value="{{county}}" {% if selected_county==county%} selected {% endif %}>{{county}}</option>
+        {% endfor %}
+    </select>
+
+    <h3>選擇站點</h3>
+    <select name="site" id="site">
+        <option value="林口">林口</option>
+        <option value="富貴角">富貴角</option>
+    </select>
+
+    <p><button type="button" onclick="query()">查詢</button></p>
+    <div id="main" style="width: 800px;height:400px;"></div>
+    {{counties}}
+<script>
+    //取得county跟site element
+    const countyEl=document.querySelector("#county");
+    const siteEl=document.querySelector("#site");
+    const chart1 = echarts.init(document.getElementById('main'));
+
+    countyEl.addEventListener("change",()=>{
+        console.log("change");
+
+        let county=countyEl.values;
+        
+    });
+
+    function drawChart(chart,site,labels,values){
+        
+        var option = {
+          title: {
+            text: `${site} PM2.5數據柱狀圖`
+          },
+          tooltip: {},
+          legend: {
+            data: ['PM25']
+          },
+          xAxis: {
+            data: labels
+          },
+          dataZoom:[{
+            type:'slider',
+            start:0,
+            end:100
+          }],
+          yAxis: {},
+          series: [
+            {
+              name: 'pm25',
+              type: 'line',
+              smooth: true,
+              data: values
+            }
+          ]
+        };
+  
+        // 使用刚指定的配置项和数据显示图表。
+        chart.setOption(option);
+    }
+
+    function query(){
+        let county=countyEl.value;
+        let site=siteEl.value;
+        const url=`/pm25-data-site?county=${county}&site=${site}`
+        //從後端要求資料
+        fetch(url)
+        .then(res=>res.json())
+        .then(data=>{
+            console.log(data);
+
+            drawChart(chart1,data.site,data.x_data,data.y_data)
+
+        });
+
+        console.log(countyEl.value,siteEl.value,url);
+        
+
+
+
+    }
+
+
+
+
+</script>
+</body>
+</html>
