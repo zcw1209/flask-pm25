@@ -10,6 +10,7 @@ from pm25 import (
 )
 import json
 
+
 app = Flask(__name__)
 
 
@@ -38,13 +39,13 @@ def pm25_data_by_site():
     else:
         columns, datas = get_pm25_data_by_site(county, site)
         df = pd.DataFrame(datas, columns=columns)
-        data = df["datacreationdate"].apply(lambda x: x.strftime("%Y-%m-%d %H"))
-
+        # 轉換字串時間格式
+        date = df["datacreationdate"].apply(lambda x: x.strftime("%Y-%m-%d %H"))
         data = {
             "county": county,
             "site": site,
-            "x_data": data.tolist(),
-            "y_data": df["pm25"].tolist(),
+            "x_data": date.to_list(),
+            "y_data": df["pm25"].to_list(),
         }
 
         result = json.dumps(data, ensure_ascii=False)
@@ -58,7 +59,7 @@ def update_pm25_db():
     count, message = update_db()
     nowtime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     result = json.dumps(
-        {"時間": nowtime, "更新比數": count, "結果": message}, ensure_ascii=False
+        {"時間": nowtime, "更新筆數": count, "結果": message}, ensure_ascii=False
     )
     return result
 
@@ -67,24 +68,24 @@ def update_pm25_db():
 def index():
     # 取得資料庫最新資料
     columns, datas = get_pm25_data_from_mysql()
-    # 取出不同縣市
+    # 取出不同縣市給select
     df = pd.DataFrame(datas, columns=columns)
     # 排序縣市
     counties = sorted(df["county"].unique().tolist())
 
+    # 選取縣市後的資料(預設ALL)
     county = request.args.get("county", "ALL")
+
     if county == "ALL":
         df1 = df.groupby("county")["pm25"].mean().reset_index()
-        x_data = df1["county"].tolist()
-
+        x_data = df1["county"].to_list()
     else:
         # 取得特定縣市的資料
         df = df.groupby("county").get_group(county)
         # 繪製所需資料
-        x_data = df["site"].tolist()
+        x_data = df["site"].to_list()
 
-    # 7:11優化這個東西
-    y_data = df["pm25"].tolist()
+    y_data = df["pm25"].to_list()
     columns = df.columns.tolist()
     datas = df.values.tolist()
 

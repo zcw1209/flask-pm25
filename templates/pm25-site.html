@@ -14,42 +14,58 @@
     </style>
 </head>
 <body>
-    <h1>站點細懸浮微粒資料(PM2.5)</h1>
+    <h1>站點細懸浮微粒資料（PM2.5）</h1>
     <h3>選擇縣市</h3>
-    <select name="county" id="county">
-        <option value="ALL">全部縣市</option>
-        {% for county in counties %}
-         <option value="{{county}}" {% if selected_county==county%} selected {% endif %}>{{county}}</option>
-        {% endfor %}
+     <!-- 縣市選擇框 -->
+    <select name="county" id="county">    
+      {% for county in counties %}
+      <option value="{{county}}" {% if selected_county==county %}  selected  {% endif %}>{{county}}</option>
+      {% endfor %}
     </select>
+  
 
     <h3>選擇站點</h3>
     <select name="site" id="site">
         <option value="林口">林口</option>
         <option value="富貴角">富貴角</option>
     </select>
-
     <p><button type="button" onclick="query()">查詢</button></p>
     <div id="main" style="width: 800px;height:400px;"></div>
     {{counties}}
 <script>
-    //取得county跟site element
+    //取得county跟site element 
     const countyEl=document.querySelector("#county");
     const siteEl=document.querySelector("#site");
-    const chart1 = echarts.init(document.getElementById('main'));
+    const chart1 = echarts.init(document.getElementById('main')); 
 
     countyEl.addEventListener("change",()=>{
-        console.log("change");
-
-        let county=countyEl.values;
-        
+      console.log("change");      
+      let county=countyEl.value;
+      const url=`/pm25-county-site?county=${county}`
+        //從後端要求資料
+        fetch(url)
+        .then(res=>res.json())
+        .then(data=>{
+            console.log(data);                 
+            siteEl.innerHTML="";
+            //動態產生option
+            for(let i=0;i<data.length;i++){
+              const opt=document.createElement("option");
+              opt.value=data[i];
+              opt.textContent=data[i];
+              siteEl.appendChild(opt);
+            }
+        });
     });
 
+
+
+
     function drawChart(chart,site,labels,values){
-        
+               
         var option = {
           title: {
-            text: `${site} PM2.5數據柱狀圖`
+            text: `${site} PM2.5數據圖`
           },
           tooltip: {},
           legend: {
@@ -66,17 +82,17 @@
           yAxis: {},
           series: [
             {
-              name: 'pm25',
+              name: 'PM25',
               type: 'line',
               smooth: true,
               data: values
             }
           ]
-        };
-  
-        // 使用刚指定的配置项和数据显示图表。
+        };  
+       
         chart.setOption(option);
     }
+
 
     function query(){
         let county=countyEl.value;
@@ -86,20 +102,18 @@
         fetch(url)
         .then(res=>res.json())
         .then(data=>{
-            console.log(data);
+            console.log(data);     
+            
+            drawChart(chart1,data.site,data.x_data,data.y_data);
 
-            drawChart(chart1,data.site,data.x_data,data.y_data)
 
         });
 
+
         console.log(countyEl.value,siteEl.value,url);
         
-
-
-
+        
     }
-
-
 
 
 </script>
