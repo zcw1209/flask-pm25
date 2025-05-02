@@ -35,6 +35,7 @@
         </select>
         <button type="submit">查詢</button>
     </form>
+
     <div id="chart-data" data-labels='{{x_data | tojson | safe }}' data-values='{{y_data | tojson | safe}}'>
     </div>
    
@@ -77,11 +78,16 @@
           },
           tooltip: {},
           legend: {
-            data: ['销量']
+            data: ['PM25']
           },
           xAxis: {
             data: labels
           },
+          dataZoom:[{
+            type:'slider',
+            start:0,
+            end:100
+          }],
           yAxis: {},
           series: [
             {

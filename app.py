@@ -56,9 +56,10 @@ def index():
         # 繪製所需資料
         x_data = df["site"].tolist()
 
+    # 7:11優化這個東西
+    y_data = df["pm25"].tolist()
     columns = df.columns.tolist()
     datas = df.values.tolist()
-    y_data = df["pm25"].tolist()
 
     return render_template(
         "index.html",
