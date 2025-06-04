@@ -1,144 +1,130 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>站點PM2.5資訊頁</title>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
-    <style>
-      #main{
-        text-align: center;
-        margin: 0 auto;
-      }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>站點 PM2.5 資訊頁</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
 </head>
+
 <body>
-    <h1>站點細懸浮微粒資料（PM2.5）</h1>
-    <h3>選擇縣市</h3>
-     <!-- 縣市選擇框 -->
-    <select name="county" id="county">    
-      {% for county in counties %}
-      <option value="{{county}}" {% if selected_county==county %}  selected  {% endif %}>{{county}}</option>
-      {% endfor %}
-    </select>
-  
+  <section class="section">
+    <div class="container">
 
-    <h3>選擇站點</h3>
-    <select name="site" id="site">
-        <!-- <option value="林口">林口</option>
-        <option value="富貴角">富貴角</option> -->
-    </select>
-    <p><button type="button" onclick="query()">查詢</button></p>
-    
-    <!-- 顯示站點名稱 查詢後更改對應的站點名稱 -->
-    <h2 id="SiteName"></h2>
+      <h1 class="title has-text-centered">站點細懸浮微粒資料（PM2.5）</h1>
 
-    <div id="main" style="width: 800px;height:400px;"></div>
-    <!-- {{counties}} -->
+      <!-- 縣市與站點選擇 -->
+      <div class="columns is-multiline is-variable is-4 mb-4">
+        <div class="column is-6">
+          <h3 class="subtitle is-6">選擇縣市</h3>
+          <div class="select is-fullwidth">
+            <select name="county" id="county">
+              {% for county in counties %}
+              <option value="{{county}}" {% if selected_county==county %} selected {% endif %}>{{county}}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
 
-    <div id="panel">
-      <h3 style="color: black;">Higher:<span class="higher" style="color: red;"></span>
-        <br>Lower:<span class="lower" style="color: rgb(81, 81, 151);"></span>
-      </h3>
+        <div class="column is-6">
+          <h3 class="subtitle is-6">選擇站點</h3>
+          <div class="select is-fullwidth">
+            <select name="site" id="site">
+              <!-- 由 JavaScript 動態填入 -->
+            </select>
+          </div>
+        </div>
+
+        <div class="column is-12 has-text-centered">
+          <button class="button is-info btn-update" onclick="query()">查詢</button>
+        </div>
+      </div>
+
+      <h2 class="subtitle has-text-centered" id="siteName"></h2>
+
+      <!-- 圖表 -->
+      <div id="main" style="width: 100%; height: 400px;" class="mb-5"></div>
+
+      <!-- 高低數值面板 -->
+      <div id="panel" class="notification is-light" style="display: none;">
+        <h3 class="has-text-black">
+          Higher:
+          <span class="has-text-danger pm25Higher">--</span><br>
+          Lower:
+          <span class="has-text-link pm25Lower">--</span>
+        </h3>
+      </div>
+
+      <div class="has-text-centered mt-5">
+        <a href="/" class="button is-link is-light">回首頁</a>
+      </div>
+
     </div>
+  </section>
 
-    <a href="/">回首頁</a>
+  <script>
+    const countyEl = document.querySelector("#county");
+    const siteEl = document.querySelector("#site");
+    const chart1 = echarts.init(document.getElementById('main'));
+    const panelEl = document.getElementById('panel');
+    const btnQueryEl = document.querySelector('.btn-update');
 
-<script>
-    //取得county跟site element 
-    const countyEl=document.querySelector("#county");
-    const siteEl=document.querySelector("#site");
-    const chart1 = echarts.init(document.getElementById('main')); 
+    function updateSite() {
+      btnQueryEl.innerText = "取得站點...";
+      let county = countyEl.value;
+      fetch(`/pm25-county-site?county=${county}`)
+        .then(res => res.json())
+        .then(data => {
+          btnQueryEl.innerText = "查詢";
+          siteEl.innerHTML = "";
+          data.forEach(site => {
+            const opt = document.createElement("option");
+            opt.value = site;
+            opt.textContent = site;
+            siteEl.appendChild(opt);
+          });
+        });
+    }
 
+    function drawChart(chart, site, labels, values) {
+      const option = {
+        title: { text: `${site} PM2.5 數據圖`, left: 'center' },
+        tooltip: {},
+        legend: { data: ['PM25'], top: 30 },
+        xAxis: { data: labels },
+        dataZoom: [{ type: 'slider', start: 0, end: 100 }],
+        yAxis: {},
+        series: [{
+          name: 'PM25',
+          type: 'line',
+          smooth: true,
+          data: values
+        }]
+      };
+      chart.setOption(option);
+    }
 
+    function query() {
+      let county = countyEl.value;
+      let site = siteEl.value;
+      panelEl.style.display = "block";
+      document.querySelector("#siteName").textContent = site;
+      fetch(`/pm25-data-site?county=${county}&site=${site}`)
+        .then(res => res.json())
+        .then(data => {
+          drawChart(chart1, data.site, data.x_data, data.y_data);
+          document.querySelector(".pm25Higher").innerText = data.higher;
+          document.querySelector(".pm25Lower").innerText = data.lower;
+        });
+    }
+
+    // 初始縣市改變時自動載入站點
+    countyEl.addEventListener("change", updateSite);
     updateSite();
-
-    function updateSite(){
-      let county=countyEl.value;
-      const url=`/pm25-county-site?county=${county}`
-        //從後端要求資料
-        fetch(url)
-        .then(res=>res.json())
-        .then(data=>{
-            console.log(data);                 
-            siteEl.innerHTML="";
-            //動態產生option
-            for(let i=0;i<data.length;i++){
-              const opt=document.createElement("option");
-              opt.value=data[i];
-              opt.textContent=data[i];
-              siteEl.appendChild(opt);
-            }
-        });
-    }
-
-
-
-    countyEl.addEventListener("change",()=>{
-      // console.log("change");      
-      updateSite();
-    });
-
-
-
-
-    function drawChart(chart,site,labels,values){
-               
-        var option = {
-          title: {
-            //text: `${site} PM2.5數據圖`
-          },
-          tooltip: {},
-          legend: {
-            data: ['PM25']
-          },
-          xAxis: {
-            data: labels
-          },
-          dataZoom:[{
-            type:'slider',
-            start:0,
-            end:100
-          }],
-          yAxis: {},
-          series: [
-            {
-              name: 'PM25',
-              type: 'line',
-              smooth: true,
-              data: values
-            }
-          ]
-        };  
-       
-        chart.setOption(option);
-    }
-
-
-    function query(){
-        let county=countyEl.value;
-        let site=siteEl.value;
-        const url=`/pm25-data-site?county=${county}&site=${site}`;
-        //從後端要求資料
-        fetch(url)
-        .then(res=>res.json())
-        .then(data=>{
-            console.log(data);     
-            document.querySelector("#SiteName").innerHTML=`[ ${county} - ${site} ]`;        
-            //取得最高/最低pm25
-            document.querySelector(".higher").innerHTML=data.higher;
-            document.querySelector(".lower").innerHTML=data.lower;
-            drawChart(chart1,data.site,data.x_data,data.y_data);
-        });
-
-
-        console.log(countyEl.value,siteEl.value,url);
-        
-        
-    }
-
-
-</script>
+  </script>
 </body>
+
 </html>

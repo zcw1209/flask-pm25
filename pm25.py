@@ -1,5 +1,10 @@
 import pandas as pd
 import pymysql
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv(".env")
 
 
 def get_site_by_county(county):
@@ -81,9 +86,14 @@ def update_db():
 
 def open_db():
     conn = None
+
     try:
         conn = pymysql.connect(
-            host="127.0.0.1", port=3306, user="root", passwd="12345678", db="demo"
+            host=os.environ.get("DB_HOST"),
+            port=int(os.environ.get("DB_PORT")),
+            user=os.environ.get("DB_USER"),
+            passwd=os.environ.get("DB_PASSWORD"),
+            db=os.environ.get("DB_NAME"),
         )
     except Exception as e:
         print("資料庫開啟失敗", e)
