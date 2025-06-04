@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 from pm25 import (
     get_pm25_data_from_mysql,
@@ -59,7 +59,7 @@ def pm25_data_by_site():
 @app.route("/update-db")
 def update_pm25_db():
     count, message = update_db()
-    nowtime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    nowtime = (datetime.now() + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
     result = json.dumps(
         {"時間": nowtime, "更新筆數": count, "結果": message}, ensure_ascii=False
     )
